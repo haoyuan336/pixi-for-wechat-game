@@ -1,4 +1,4 @@
-import Pool from './old/base/pool'
+import Pool from './base/pool'
 
 let instance
 

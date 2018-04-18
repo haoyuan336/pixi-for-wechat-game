@@ -1,5 +1,5 @@
 import Sprite   from '../base/sprite'
-import DataBus  from '../../databus'
+import DataBus  from '../databus'
 
 const BULLET_IMG_SRC = 'images/bullet.png'
 const BULLET_WIDTH   = 16
