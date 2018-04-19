@@ -28,17 +28,14 @@ const Main = function(){
     referFrame();
 
 
-    for (let i in resources){
-        PIXI.loader.add(resources[i], resources[i]);
-    }
+    // for (let i in resources){
+    //     PIXI.loader.add(resources[i], resources[i]);
+    // }
     PIXI.loader.load((loader, res)=>{
         window.resouces = res;
         console.log('资源加载完毕');
         _gameWorld = GameWorld();
         stage.addChild(_gameWorld.node);
     });
-
-
-
 };
 export default Main;

@@ -1,9 +1,17 @@
 import * as PIXI from './libs/pixi.min'
 import defines from './defines'
+const GameState  =  {
+    Invalide: -1,
+    Run: 1,
+    Dead: 2
+};
 const GameWorld = function () {
     let that = {};
     that.node = new PIXI.Container();
     let _bgList = [];
+    let _state = GameState.Invalide;
+    let _speed = 0;
+    let _acc = 0.0025;
     for (let i = 0 ; i < 2 ; i ++){
         let bg = new PIXI.Sprite.fromImage(defines.resPath + 'bg.png');
         that.node.addChild(bg);
@@ -16,6 +24,16 @@ const GameWorld = function () {
     }
     let _towersList = [];
 
+    let _bird = new PIXI.Sprite.fromImage(defines.resPath + 'bird.png');
+    that.node.addChild(_bird);
+    _bird.anchor = {
+        x: 0.5,
+        y: 0.5
+    };
+    _bird.position = {
+        x: defines.designSize.width * 0.5,
+        y: defines.designSize.height * 0.5
+    };
 
     //添加碰撞柱子
 
@@ -30,12 +48,12 @@ const GameWorld = function () {
                 that.node.addChild(tower);
                 let y = 0;
                 if (j ===0){
-                    y = offsetY - tower.height   - 50
+                    y = offsetY - tower.height   - 70
                 }else {
-                    y = offsetY + 50
+                    y = offsetY + 70
                 }
                 tower.position = {
-                    x: defines.designSize.width * 1.5 + 140 * i,
+                    x: defines.designSize.width * 1.5 + 200 * i,
                     y: y
                 };
                 list.push(tower);
@@ -46,41 +64,75 @@ const GameWorld = function () {
     };
 
     //点击屏幕即可加载柱子
-    // that.node.on('');
-
-    const _touchBegin = function () {
-        console.log('touch began');
+    const jump = function () {
+        _speed = - 0.6;
     };
-    const _touchMoved = function () {
-        console.log('touch move');
-    };
-    const _touchCancel = function () {
-        console.log('touch cancel');
-    };
-    const _touchEnd = function () {
-        console.log('touch end');
-    };
-    const _onClick = function () {
-        console.log('click')
-    };
-    (()=> {
-        that.node.on("mousedown", _touchBegin)
-            .on("mousemove", _touchMoved)
-            .on("mouseout", _touchCancel)
-            .on("mouseup", _touchEnd)
-            .on("touchstart", _touchBegin)
-            .on("touchmove", _touchMoved)
-            .on("touchendoutside", _touchCancel)
-            .on("touchend", _touchEnd)
-            .on("click", _onClick)
-            .on("tap", _onClick);
-    })();
+    const setState = function (state) {
+        if (_state === state){
+            return
+        }
+        switch (state){
+            case GameState.Run:
+                if (_towersList.length === 0){
+                    addTower();
+                    jump();
+                }
+                break;
+            case GameState.Dead:
 
 
-    that.update = function () {
+
+                break;
+            default:
+                break;
+        }
+        _state = state;
+    };
+
+    wx.onTouchStart((e)=>{
+        console.log('on touch start');
+        if (GameState.Invalide === _state){
+            setState(GameState.Run);
+        }else if (_state === GameState.Run){
+            jump();
+        }
+    });
+    wx.onTouchMove((e)=>{
+        console.log('on touch move');
+    });
+    wx.onTouchEnd((e)=>{
+        console.log('on touch end');
+    });
+    wx.onTouchCancel((e)=>{
+        console.log('on touch cancel');
+    });
+    window.TouchEvent = function () {
+        // console.log('touch event');
+    };
+    window.MouseEvent  = function () {
+        // console.log('move event');
+    };
+
+    that.update = function (dt) {
+
+        if (_state === GameState.Run){
+            _bird.position = {
+                x: _bird.position.x,
+                y: _bird.position.y + _speed * dt
+            };
+            _speed += _acc * dt;
+            if (_bird.position.y + _bird.height * 0.5 > defines.designSize.height){
+                console.log('collision bottom');
+                setState(GameState.Dead);
+            }else if (_bird.position.y - _bird.height * 0.5 < 0){
+                console.log('collision top');
+                setState(GameState.Dead);
+            }
+        }
+
         for (let i = 0 ; i < _bgList.length ; i ++){
             _bgList[i].position = {
-                x: _bgList[i].position.x - 1,
+                x: _bgList[i].position.x - 2,
                 y: 0
             };
         }
@@ -98,7 +150,7 @@ const GameWorld = function () {
             let list = _towersList[i];
             for (let j = 0 ; j < list.length; j ++){
                 list[j].position = {
-                    x: list[j].position.x - 1,
+                    x: list[j].position.x - 2,
                     y: list[j].position.y
                 }
             }
@@ -110,19 +162,19 @@ const GameWorld = function () {
                 for (let j = 0 ; j < list.length ; j ++){
                     let y = 0;
                     if (j ===0){
-                        y = offsetY - list[j].height   - 50
+                        y = offsetY - list[j].height   - 70
                     }else {
-                        y = offsetY + 50
+                        y = offsetY + 70
                     }
                     list[j].position = {
-                        x: defines.designSize.width * 1.5 - list[j].width + 140,
+                        x: defines.designSize.width* 1.5 - list[j].width + 200,
                         y: y
                     }
                 }
             }
         }
-
     };
+
     return that;
 };
 export default GameWorld;
