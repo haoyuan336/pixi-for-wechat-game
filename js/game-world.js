@@ -1,6 +1,7 @@
 import * as PIXI from './libs/pixi.min'
 import defines from './defines'
 import resources from './resources'
+import * as SAT from './libs/SAT'
 const GameState = {
     Invalide: -1,
     Run: 1,
@@ -26,38 +27,35 @@ const GameWorld = function () {
     let _towersList = [];
 
     let _bird = new PIXI.Sprite(window.resouces[resources.bird].texture);
+    _bird.zIndex = 1;
     that.node.addChild(_bird);
     _bird.anchor = {
         x: 0.5,
         y: 0.5
     };
+
     _bird.position = {
         x: defines.designSize.width * 0.5,
         y: defines.designSize.height * 0.5
     };
+    _bird.circle = new SAT.Circle(new SAT.Vector(_bird.position.x, _bird.position.y), _bird.width * 0.3);
+    _bird.graphics = new PIXI.Graphics();
+    that.node.addChild(_bird.graphics);
+    _bird.graphics.beginFill('#000000', 0.5);
+    _bird.graphics.zIndex = 1;
+    _bird.graphics.drawCircle(_bird.circle.pos.x, _bird.circle.pos.y, _bird.circle.r);
 
     //添加碰撞柱子
 
-
+    let _headImage = undefined;
     that.initPlayerInfo = function (nickName, avatarUrl) {
         console.log('昵称' + nickName);
         console.log('头像' + avatarUrl);
 
         let headImage = new PIXI.Sprite.fromImage(avatarUrl);
         that.node.addChild(headImage);
-        headImage.visible = false;
-        setTimeout(()=> {
-            headImage.scale = {
-                x: 40 / headImage.width,
-                y: 40 / headImage.height
-            };
-            headImage.visible = true;
-            headImage.position = {
-                x: 10,
-                y: 10
-            }
-        }, 100);
-
+        headImage.zIndex = 10;
+        _headImage = headImage;
         //加上一个昵称
         let nickNameLabel = new PIXI.Text('ID:' + nickName, {
             fontFamily: 'Arial',
@@ -66,11 +64,28 @@ const GameWorld = function () {
         });
 
         that.node.addChild(nickNameLabel);
+        nickNameLabel.zIndex =10;
         nickNameLabel.position = {
             x: 10,
             y: 55
-        }
+        };
+        sortChildNode(that.node);
+    };
 
+
+    const sortChildNode = function (node) {
+        let children = node.children;
+        children.sort((a,b)=>{
+            if (!a.zIndex){
+                a.zIndex = 0;
+            }
+            if (!b.zIndex){
+                b.zIndex = 0;
+            }
+
+            console.log('排序');
+            return a.zIndex - b.zIndex;
+        })
     };
 
 
@@ -81,6 +96,7 @@ const GameWorld = function () {
             let offsetY = Math.random() * (defines.designSize.height - 280) + 140;
             for (let j = 0; j < 2; j++) {
                 let tower = new PIXI.Sprite(window.resouces[resources[towerImage[j]]].texture);
+                tower.zIndex = 1;
                 that.node.addChild(tower);
                 let y = 0;
                 if (j === 0) {
@@ -92,11 +108,21 @@ const GameWorld = function () {
                     x: defines.designSize.width * 1.5 + 200 * i,
                     y: y
                 };
+
+                tower.polygon = new SAT.Polygon(new SAT.Vector(tower.position.x, tower.position.y),[
+                    new SAT.Vector(tower.position.x, tower.position.y),
+                    new SAT.Vector(tower.position.x + tower.width, tower.position.y),
+                    new SAT.Vector(tower.position.x + tower.width, tower.position.y + tower.height),
+                    new SAT.Vector(tower.position.x , tower.position.y + tower.height)
+                ]);
+                tower.graphics = new PIXI.Graphics();
+                that.node.addChild(tower.graphics);
+                tower.graphics.zIndex = 2;
                 list.push(tower);
             }
             _towersList.push(list);
         }
-
+        sortChildNode(that.node);
     };
 
     //点击屏幕即可加载柱子
@@ -125,7 +151,6 @@ const GameWorld = function () {
     };
 
     wx.onTouchStart((e)=> {
-        console.log('on touch start');
         if (GameState.Invalide === _state) {
             setState(GameState.Run);
         } else if (_state === GameState.Run) {
@@ -133,13 +158,10 @@ const GameWorld = function () {
         }
     });
     wx.onTouchMove((e)=> {
-        console.log('on touch move');
     });
     wx.onTouchEnd((e)=> {
-        console.log('on touch end');
     });
     wx.onTouchCancel((e)=> {
-        console.log('on touch cancel');
     });
     window.TouchEvent = function () {
         // console.log('touch event');
@@ -148,13 +170,47 @@ const GameWorld = function () {
         // console.log('move event');
     };
 
+    const updatePolygonPos = function (node) {
+        let polygon = node.polygon;
+        polygon.setPoints([
+            new SAT.Vector(node.position.x, node.position.y),
+            new SAT.Vector(node.position.x + node.width, node.position.y),
+            new SAT.Vector(node.position.x + node.width, node.position.y + node.height),
+            new SAT.Vector(node.position.x , node.position.y + node.height)]);
+        let graphics = node.graphics;
+        graphics.clear();
+        graphics.beginFill('#ff0000', 0.5);
+        let posList = [];
+        for (let i = 0 ; i < polygon.points.length ; i ++){
+            let point = polygon.points[i];
+            posList.push(new PIXI.Point(point.x, point.y));
+        }
+        graphics.drawPolygon(posList);
+    };
     that.update = function (dt) {
 
+        if (_headImage && _headImage.width !== 1 && _headImage.scale.x === 1){
+            console.log('head image width = ' + _headImage.width);
+            _headImage.scale = {
+                x: 40 / _headImage.width,
+                y: 40 / _headImage.height
+            };
+            _headImage.position = {
+                x: 10,
+                y: 10
+            }
+        }
         if (_state === GameState.Run) {
             _bird.position = {
                 x: _bird.position.x,
                 y: _bird.position.y + _speed * dt
             };
+            _bird.circle.pos = _bird.position;
+            _bird.graphics.clear();
+            _bird.graphics.beginFill('#000000', 0.5);
+            _bird.graphics.drawCircle(_bird.circle.pos.x, _bird.circle.pos.y,  _bird.circle.r);
+
+
             _speed += _acc * dt;
             if (_bird.position.y + _bird.height * 0.5 > defines.designSize.height) {
                 console.log('collision bottom');
@@ -164,8 +220,6 @@ const GameWorld = function () {
                 setState(GameState.Dead);
             }
         }
-
-
         if (_state === GameState.Run) {
             for (let i = 0; i < _bgList.length; i++) {
                 _bgList[i].position = {
@@ -188,7 +242,8 @@ const GameWorld = function () {
                     list[j].position = {
                         x: list[j].position.x - 2,
                         y: list[j].position.y
-                    }
+                    };
+                    updatePolygonPos(list[j]);
                 }
             }
             for (let i = 0; i < _towersList.length; i++) {
@@ -209,9 +264,20 @@ const GameWorld = function () {
                     }
                 }
             }
-
+            testCollision();
         }
+    };
 
+    const testCollision = function () {
+        for (let i = 0 ; i < _towersList.length ; i ++){
+            for (let j = 0 ; j < _towersList[i].length ; j ++){
+                let tower = _towersList[i][j];
+                if (SAT.testCirclePolygon(_bird.circle, tower.polygon, new SAT.Response())){
+                    console.log('碰撞');
+                }else {
+                }
+            }
+        }
 
     };
 

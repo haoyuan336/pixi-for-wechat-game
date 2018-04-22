@@ -62,8 +62,13 @@ const Main = function(){
                 }
             })
         }
-    })
-
+    });
+    wx.onShareAppMessage(function () {
+        // 用户点击了“转发”按钮
+        return {
+            title: '转发标题'
+        }
+    });
 
 };
 export default Main;
