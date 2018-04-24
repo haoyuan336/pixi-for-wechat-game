@@ -187,8 +187,9 @@ const GameWorld = function () {
         }
         graphics.drawPolygon(posList);
     };
-    that.update = function (dt) {
+    const update = function (dt) {
 
+        console.log('update = ' + dt);
         if (_headImage && _headImage.width !== 1 && _headImage.scale.x === 1){
             console.log('head image width = ' + _headImage.width);
             _headImage.scale = {
@@ -223,29 +224,13 @@ const GameWorld = function () {
         if (_state === GameState.Run) {
             for (let i = 0; i < _bgList.length; i++) {
                 _bgList[i].position = {
-                    x: _bgList[i].position.x - 2,
+                    x: _bgList[i].position.x -  dt,
                     y: 0
                 };
             }
-            for (let i = 0; i < _bgList.length; i++) {
-                if ((_bgList[i].position.x + _bgList[i].width) <= 0) {
-                    _bgList[i].position = {
-                        x: _bgList[i].width,
-                        y: 0
-                    }
-                }
-            }
 
-            for (let i = 0; i < _towersList.length; i++) {
-                let list = _towersList[i];
-                for (let j = 0; j < list.length; j++) {
-                    list[j].position = {
-                        x: list[j].position.x - 2,
-                        y: list[j].position.y
-                    };
-                    updatePolygonPos(list[j]);
-                }
-            }
+
+
             for (let i = 0; i < _towersList.length; i++) {
                 let list = _towersList[i];
                 if ((list[0].position.x + list[0].width) < 0) {
@@ -268,16 +253,20 @@ const GameWorld = function () {
         }
     };
 
+    that.update = update;
+
+
+
     const testCollision = function () {
-        for (let i = 0 ; i < _towersList.length ; i ++){
-            for (let j = 0 ; j < _towersList[i].length ; j ++){
-                let tower = _towersList[i][j];
-                if (SAT.testCirclePolygon(_bird.circle, tower.polygon, new SAT.Response())){
-                    console.log('碰撞');
-                }else {
-                }
-            }
-        }
+        // for (let i = 0 ; i < _towersList.length ; i ++){
+        //     for (let j = 0 ; j < _towersList[i].length ; j ++){
+        //         let tower = _towersList[i][j];
+        //         if (SAT.testCirclePolygon(_bird.circle, tower.polygon, new SAT.Response())){
+        //             console.log('碰撞');
+        //         }else {
+        //         }
+        //     }
+        // }
 
     };
 
