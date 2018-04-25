@@ -13,7 +13,9 @@ const GameWorld = function () {
     let _bgList = [];
     let _state = GameState.Invalide;
     let _speed = 0;
-    let _acc = 0.0025;
+    const _initSpeed = -10;
+    const _bgSpeed = 2;
+    let _acc = 0.6;
     for (let i = 0; i < 2; i++) {
         let bg = new PIXI.Sprite(window.resouces[resources.bg].texture);
         that.node.addChild(bg);
@@ -27,7 +29,7 @@ const GameWorld = function () {
     let _towersList = [];
 
     let _bird = new PIXI.Sprite(window.resouces[resources.bird].texture);
-    _bird.zIndex = 1;
+    _bird.zIndex = 11;
     that.node.addChild(_bird);
     _bird.anchor = {
         x: 0.5,
@@ -56,6 +58,12 @@ const GameWorld = function () {
         that.node.addChild(headImage);
         headImage.zIndex = 10;
         _headImage = headImage;
+        _headImage.visible = false;
+        setTimeout(()=>{
+            _headImage.visible = true;
+            console.log('width = ' + headImage.width);
+            headImage.scale.set(60 / headImage.width);
+        }, 1000);
         //加上一个昵称
         let nickNameLabel = new PIXI.Text('ID:' + nickName, {
             fontFamily: 'Arial',
@@ -89,6 +97,38 @@ const GameWorld = function () {
     };
 
 
+    const moveTower = function (dt) {
+        for (let i = 0 ; i < _towersList.length ; i ++){
+            let towers = _towersList[i];
+            towers[0].position = {
+                x: towers[0].position.x - dt * _bgSpeed,
+                y: towers[0].position.y
+            }
+            towers[1].position = {
+                x: towers[1].position.x - dt * _bgSpeed,
+                y: towers[1].position.y
+            }
+        }
+        for (let i = 0; i < _towersList.length; i++) {
+            let list = _towersList[i];
+            if ((list[0].position.x + list[0].width) < 0) {
+                list.score = 1;
+                let offsetY = Math.random() * (defines.designSize.height - 280) + 140;
+                for (let j = 0; j < list.length; j++) {
+                    let y = 0;
+                    if (j === 0) {
+                        y = offsetY - list[j].height - 70
+                    } else {
+                        y = offsetY + 70
+                    }
+                    list[j].position = {
+                        x: defines.designSize.width * 1.5 - list[j].width + 200,
+                        y: y
+                    }
+                }
+            }
+        }
+    }
     const addTower = function () {
         let towerImage = ["pipeDown", "pipeUp"];
         for (let i = 0; i < 3; i++) {
@@ -120,6 +160,7 @@ const GameWorld = function () {
                 tower.graphics.zIndex = 2;
                 list.push(tower);
             }
+            list.score = 1;
             _towersList.push(list);
         }
         sortChildNode(that.node);
@@ -127,7 +168,7 @@ const GameWorld = function () {
 
     //点击屏幕即可加载柱子
     const jump = function () {
-        _speed = -0.6;
+        _speed = _initSpeed;
     };
     const setState = function (state) {
         if (_state === state) {
@@ -189,18 +230,19 @@ const GameWorld = function () {
     };
     const update = function (dt) {
 
-        console.log('update = ' + dt);
-        if (_headImage && _headImage.width !== 1 && _headImage.scale.x === 1){
-            console.log('head image width = ' + _headImage.width);
-            _headImage.scale = {
-                x: 40 / _headImage.width,
-                y: 40 / _headImage.height
-            };
-            _headImage.position = {
-                x: 10,
-                y: 10
-            }
-        }
+        // console.log('update = ' + dt);
+        //
+        // if (_headImage && _headImage.width !== 1 && _headImage.scale.x === 1){
+        //     // console.log('head image width = ' + _headImage.width);
+        //     _headImage.scale = {
+        //         x: 40 / _headImage.width,
+        //         y: 40 / _headImage.height
+        //     };
+        //     _headImage.position = {
+        //         x: 10,
+        //         y: 10
+        //     }
+        // }
         if (_state === GameState.Run) {
             _bird.position = {
                 x: _bird.position.x,
@@ -224,31 +266,30 @@ const GameWorld = function () {
         if (_state === GameState.Run) {
             for (let i = 0; i < _bgList.length; i++) {
                 _bgList[i].position = {
-                    x: _bgList[i].position.x -  dt,
+                    x: _bgList[i].position.x -  dt * _bgSpeed,
                     y: 0
                 };
             }
-
-
-
-            for (let i = 0; i < _towersList.length; i++) {
-                let list = _towersList[i];
-                if ((list[0].position.x + list[0].width) < 0) {
-                    let offsetY = Math.random() * (defines.designSize.height - 280) + 140;
-                    for (let j = 0; j < list.length; j++) {
-                        let y = 0;
-                        if (j === 0) {
-                            y = offsetY - list[j].height - 70
-                        } else {
-                            y = offsetY + 70
-                        }
-                        list[j].position = {
-                            x: defines.designSize.width * 1.5 - list[j].width + 200,
-                            y: y
-                        }
+            let maxRight = 0;
+            for (let i = 0 ; i < _bgList.length ; i ++){
+                if (_bgList[i].position.x > maxRight){
+                    maxRight = _bgList[i].position.x;
+                }
+            }
+            for (let i = 0 ; i < _bgList.length ; i ++){
+                let bg = _bgList[i];
+                if (bg.position.x + bg.width < 0){
+                    bg.position = {
+                        x: maxRight + bg.width - dt * 2 * _bgSpeed,
+                        y: 0
                     }
                 }
             }
+
+
+            moveTower(dt);
+
+
             testCollision();
         }
     };
