@@ -16,6 +16,7 @@ const GameWorld = function () {
     const _initSpeed = -10;
     const _bgSpeed = 2;
     let _acc = 0.6;
+    let _score = 0;
     for (let i = 0; i < 2; i++) {
         let bg = new PIXI.Sprite(window.resouces[resources.bg].texture);
         that.node.addChild(bg);
@@ -40,13 +41,19 @@ const GameWorld = function () {
         x: defines.designSize.width * 0.5,
         y: defines.designSize.height * 0.5
     };
-    _bird.circle = new SAT.Circle(new SAT.Vector(_bird.position.x, _bird.position.y), _bird.width * 0.3);
-    _bird.graphics = new PIXI.Graphics();
-    that.node.addChild(_bird.graphics);
-    _bird.graphics.beginFill('#000000', 0.5);
-    _bird.graphics.zIndex = 1;
-    _bird.graphics.drawCircle(_bird.circle.pos.x, _bird.circle.pos.y, _bird.circle.r);
 
+    let _scoreText = new PIXI.Text('0', {
+        fontFamily: 'Arial',
+        fontSize: 20,
+        fill: 0xffffff
+    });
+    _scoreText.zIndex = 20;
+    _scoreText.anchor.set(0.5);
+    _scoreText.position = {
+        x: defines.designSize.width * 0.5,
+        y: defines.designSize.height * 0.2
+    };
+    that.node.addChild(_scoreText);
     //添加碰撞柱子
 
     let _headImage = undefined;
@@ -59,7 +66,7 @@ const GameWorld = function () {
         headImage.zIndex = 10;
         _headImage = headImage;
         _headImage.visible = false;
-        setTimeout(()=>{
+        setTimeout(()=> {
             _headImage.visible = true;
             console.log('width = ' + headImage.width);
             headImage.scale.set(60 / headImage.width);
@@ -72,7 +79,7 @@ const GameWorld = function () {
         });
 
         that.node.addChild(nickNameLabel);
-        nickNameLabel.zIndex =10;
+        nickNameLabel.zIndex = 10;
         nickNameLabel.position = {
             x: 10,
             y: 55
@@ -83,11 +90,11 @@ const GameWorld = function () {
 
     const sortChildNode = function (node) {
         let children = node.children;
-        children.sort((a,b)=>{
-            if (!a.zIndex){
+        children.sort((a, b)=> {
+            if (!a.zIndex) {
                 a.zIndex = 0;
             }
-            if (!b.zIndex){
+            if (!b.zIndex) {
                 b.zIndex = 0;
             }
 
@@ -98,17 +105,23 @@ const GameWorld = function () {
 
 
     const moveTower = function (dt) {
-        for (let i = 0 ; i < _towersList.length ; i ++){
+        for (let i = 0; i < _towersList.length; i++) {
             let towers = _towersList[i];
             towers[0].position = {
                 x: towers[0].position.x - dt * _bgSpeed,
                 y: towers[0].position.y
-            }
+            };
+
             towers[1].position = {
                 x: towers[1].position.x - dt * _bgSpeed,
                 y: towers[1].position.y
+            };
+            if (towers[1].position.x < _bird.position.x && towers.score === 1) {
+                _score += towers.score;
+                towers.score = 0;
             }
         }
+        _scoreText.text = _score + '';
         for (let i = 0; i < _towersList.length; i++) {
             let list = _towersList[i];
             if ((list[0].position.x + list[0].width) < 0) {
@@ -149,15 +162,6 @@ const GameWorld = function () {
                     y: y
                 };
 
-                tower.polygon = new SAT.Polygon(new SAT.Vector(tower.position.x, tower.position.y),[
-                    new SAT.Vector(tower.position.x, tower.position.y),
-                    new SAT.Vector(tower.position.x + tower.width, tower.position.y),
-                    new SAT.Vector(tower.position.x + tower.width, tower.position.y + tower.height),
-                    new SAT.Vector(tower.position.x , tower.position.y + tower.height)
-                ]);
-                tower.graphics = new PIXI.Graphics();
-                that.node.addChild(tower.graphics);
-                tower.graphics.zIndex = 2;
                 list.push(tower);
             }
             list.score = 1;
@@ -210,50 +214,12 @@ const GameWorld = function () {
     window.MouseEvent = function () {
         // console.log('move event');
     };
-
-    const updatePolygonPos = function (node) {
-        let polygon = node.polygon;
-        polygon.setPoints([
-            new SAT.Vector(node.position.x, node.position.y),
-            new SAT.Vector(node.position.x + node.width, node.position.y),
-            new SAT.Vector(node.position.x + node.width, node.position.y + node.height),
-            new SAT.Vector(node.position.x , node.position.y + node.height)]);
-        let graphics = node.graphics;
-        graphics.clear();
-        graphics.beginFill('#ff0000', 0.5);
-        let posList = [];
-        for (let i = 0 ; i < polygon.points.length ; i ++){
-            let point = polygon.points[i];
-            posList.push(new PIXI.Point(point.x, point.y));
-        }
-        graphics.drawPolygon(posList);
-    };
     const update = function (dt) {
-
-        // console.log('update = ' + dt);
-        //
-        // if (_headImage && _headImage.width !== 1 && _headImage.scale.x === 1){
-        //     // console.log('head image width = ' + _headImage.width);
-        //     _headImage.scale = {
-        //         x: 40 / _headImage.width,
-        //         y: 40 / _headImage.height
-        //     };
-        //     _headImage.position = {
-        //         x: 10,
-        //         y: 10
-        //     }
-        // }
         if (_state === GameState.Run) {
             _bird.position = {
                 x: _bird.position.x,
                 y: _bird.position.y + _speed * dt
             };
-            _bird.circle.pos = _bird.position;
-            _bird.graphics.clear();
-            _bird.graphics.beginFill('#000000', 0.5);
-            _bird.graphics.drawCircle(_bird.circle.pos.x, _bird.circle.pos.y,  _bird.circle.r);
-
-
             _speed += _acc * dt;
             if (_bird.position.y + _bird.height * 0.5 > defines.designSize.height) {
                 console.log('collision bottom');
@@ -262,34 +228,31 @@ const GameWorld = function () {
                 console.log('collision top');
                 setState(GameState.Dead);
             }
+
         }
         if (_state === GameState.Run) {
             for (let i = 0; i < _bgList.length; i++) {
                 _bgList[i].position = {
-                    x: _bgList[i].position.x -  dt * _bgSpeed,
+                    x: _bgList[i].position.x - dt * _bgSpeed,
                     y: 0
                 };
             }
             let maxRight = 0;
-            for (let i = 0 ; i < _bgList.length ; i ++){
-                if (_bgList[i].position.x > maxRight){
+            for (let i = 0; i < _bgList.length; i++) {
+                if (_bgList[i].position.x > maxRight) {
                     maxRight = _bgList[i].position.x;
                 }
             }
-            for (let i = 0 ; i < _bgList.length ; i ++){
+            for (let i = 0; i < _bgList.length; i++) {
                 let bg = _bgList[i];
-                if (bg.position.x + bg.width < 0){
+                if (bg.position.x + bg.width < 0) {
                     bg.position = {
                         x: maxRight + bg.width - dt * 2 * _bgSpeed,
                         y: 0
                     }
                 }
             }
-
-
             moveTower(dt);
-
-
             testCollision();
         }
     };
@@ -297,20 +260,21 @@ const GameWorld = function () {
     that.update = update;
 
 
-
     const testCollision = function () {
-        // for (let i = 0 ; i < _towersList.length ; i ++){
-        //     for (let j = 0 ; j < _towersList[i].length ; j ++){
-        //         let tower = _towersList[i][j];
-        //         if (SAT.testCirclePolygon(_bird.circle, tower.polygon, new SAT.Response())){
-        //             console.log('碰撞');
-        //         }else {
-        //         }
-        //     }
-        // }
-
+        for (let i = 0; i < _towersList.length; i++) {
+            for (let j = 0; j < _towersList[i].length; j++) {
+                let tower = _towersList[i][j];
+                if (boxesIntersect(_bird, tower)) {
+                    setState(GameState.Dead);
+                }
+            }
+        }
     };
-
+    const boxesIntersect = function (a, b) {
+        let aa = a.getBounds();
+        let bb = b.getBounds();
+        return aa.x + aa.width * 0.6 > bb.x && aa.x < bb.x + bb.width && aa.y + aa.height * 0.6 > bb.y && aa.y < bb.y + bb.height;
+    };
     return that;
 };
 export default GameWorld;
