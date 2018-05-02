@@ -14,28 +14,16 @@ const Main = function(){
     let _gameWorld = undefined;
 
 
-
-    let sp = new PIXI.Sprite.fromImage('./images/bird.png');
-    stage.addChild(sp);
+    //
+    // let sp = new PIXI.Sprite.fromImage('./images/bird.png');
+    // stage.addChild(sp);
 
     let _ticker  = new PIXI.ticker.Ticker();
     _ticker.add((dt)=>{
-
-        if (sp){
-            sp.position = {
-                x: sp.position.x + 1 * dt,
-                y: 0
-            };
-        }
-        if (sp.position.x > defines.designSize.width){
-            sp.position.x = 0;
-        }
-
-
         app.render(stage);
-        // if (_gameWorld){
-        //     _gameWorld.update(dt);
-        // }
+        if (_gameWorld){
+            _gameWorld.update(dt);
+        }
     });
     _ticker.start();
 
@@ -48,8 +36,8 @@ const Main = function(){
     PIXI.loader.load((loader, res)=>{
         window.resouces = res;
         console.log('资源加载完毕');
-        // _gameWorld = GameWorld();
-        // stage.addChild(_gameWorld.node);
+        _gameWorld = GameWorld();
+        stage.addChild(_gameWorld.node);
     });
 
     wx.login({
