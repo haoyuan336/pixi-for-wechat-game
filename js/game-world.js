@@ -7,9 +7,28 @@ const GameState = {
     Run: 1,
     Dead: 2
 };
-const GameWorld = function () {
+const GameWorld = function (app) {
     let that = {};
     that.node = new PIXI.Container();
+
+    that.node.interactive = true;
+    // that.node.on('touchstart', (event)=>{
+    //     console.log('touch  start');
+    //
+    // });
+    // that.node.on('touchmove', (event)=>{
+    //     console.log('touch move');
+    //     let data = event.data;
+    //     let pos = data.getLocalPosition(that.node);
+    //     console.log('pos = ' + JSON.stringify(pos));
+    // });
+
+
+    let screenWidth = app.view.width;
+    console.log('screen width = ' + screenWidth);
+    let screenHeight = app.view.height;
+    console.log('screent height = ' + screenHeight);
+
     let _bgList = [];
     let _state = GameState.Invalide;
     let _speed = 0;
@@ -22,9 +41,10 @@ const GameWorld = function () {
         that.node.addChild(bg);
         console.log('width = ' + bg.width);
         _bgList.push(bg);
+        bg.anchor.set(0.5);
         bg.position = {
-            x: bg.width * i,
-            y: 0
+            x: screenWidth * i,
+            y:  screenHeight * 0.5
         }
     }
     let _towersList = [];
@@ -41,6 +61,16 @@ const GameWorld = function () {
         x: defines.designSize.width * 0.5,
         y: defines.designSize.height * 0.5
     };
+
+    _bird.interactive = true;
+    _bird.on('touchstart', ev =>{
+            console.log('point down');
+        }
+    );
+    _bird.on('touchmove', en=>{
+        console.log('touch move sss');
+    });
+
 
     let _scoreText = new PIXI.Text('0', {
         fontFamily: 'Arial',
@@ -195,25 +225,35 @@ const GameWorld = function () {
         _state = state;
     };
 
-    wx.onTouchStart((e)=> {
-        if (GameState.Invalide === _state) {
-            setState(GameState.Run);
-        } else if (_state === GameState.Run) {
-            jump();
-        }
-    });
-    wx.onTouchMove((e)=> {
-    });
-    wx.onTouchEnd((e)=> {
-    });
-    wx.onTouchCancel((e)=> {
-    });
-    window.TouchEvent = function () {
-        // console.log('touch event');
-    };
-    window.MouseEvent = function () {
-        // console.log('move event');
-    };
+    // that.node.on('touchstart', ()=>{
+    //     console.log('touch start');
+    // });
+    // that.node.on('touchmove', ()=>{
+    //     console.log('touch move');
+    // });
+    // that.node.on('touchend', ()=>{
+    //     console.log('touch end');
+    // })
+
+    // wx.onTouchStart((e)=> {
+    //     if (GameState.Invalide === _state) {
+    //         setState(GameState.Run);
+    //     } else if (_state === GameState.Run) {
+    //         jump();
+    //     }
+    // });
+    // wx.onTouchMove((e)=> {
+    // });
+    // wx.onTouchEnd((e)=> {
+    // });
+    // wx.onTouchCancel((e)=> {
+    // });
+    // // window.TouchEvent = function () {
+    //     // console.log('touch event');
+    // };
+    // window.MouseEvent = function () {
+    //     // console.log('move event');
+    // };
     const update = function (dt) {
         if (_state === GameState.Run) {
             _bird.position = {

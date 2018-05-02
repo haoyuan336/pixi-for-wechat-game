@@ -3,24 +3,44 @@ import defines from './defines'
 import GameWorld from './game-world'
 import resources from './resources'
 // 47.104.67.84  服务器地址
+
+const {pixelRatio, windowWidth, windowHeight} = wx.getSystemInfoSync()
+console.log(' 设备的像素比是' + pixelRatio);
 const Main = function(){
     console.log('main');
 
     // let app = new PIXI.web({width: defines.designSize.width, height: defines.designSize.height, view: canvas});
-    let app = new PIXI.WebGLRenderer({width: defines.designSize.width, height: defines.designSize.height, view: canvas});
+
+    let app = new PIXI.Application({
+        width: windowWidth,
+        height: windowHeight,
+        resolution: pixelRatio,
+        view: canvas
+    });
+    console.log('type = ' + PIXI.utils.isWebGLSupported());
+
+    // let app = new PIXI.WebGLRenderer({width: defines.designSize.width,
+    //     height: defines.designSize.height, view: canvas, resolution: pixelRatio});
     let stage = new PIXI.Container();
 
-    let _currentTime = new Date().getTime();
     let _gameWorld = undefined;
 
 
+    app.renderer.plugins.interaction.mapPositionToPoint = (point, x, y)=>{
+        point.x = x * pixelRatio;
+        point.y = y * pixelRatio;
+    };
+    // PIXI.interaction.InteractionManager.prototype.mapPositionToPoint = (point, x, y) => {
+    //     point.x = x * pixelRatio
+    //     point.y = y * pixelRatio
+    // }
     //
     // let sp = new PIXI.Sprite.fromImage('./images/bird.png');
     // stage.addChild(sp);
 
     let _ticker  = new PIXI.ticker.Ticker();
     _ticker.add((dt)=>{
-        app.render(stage);
+        app.renderer.render(stage);
         if (_gameWorld){
             _gameWorld.update(dt);
         }
@@ -36,7 +56,7 @@ const Main = function(){
     PIXI.loader.load((loader, res)=>{
         window.resouces = res;
         console.log('资源加载完毕');
-        _gameWorld = GameWorld();
+        _gameWorld = GameWorld(app);
         stage.addChild(_gameWorld.node);
     });
 
