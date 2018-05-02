@@ -163,12 +163,12 @@ const GameWorld = function () {
     });
     wx.onTouchCancel((e)=> {
     });
-    window.TouchEvent = function () {
-        // console.log('touch event');
-    };
-    window.MouseEvent = function () {
-        // console.log('move event');
-    };
+    // window.TouchEvent = function () {
+    //     // console.log('touch event');
+    // };
+    // window.MouseEvent = function () {
+    //     // console.log('move event');
+    // };
 
     const updatePolygonPos = function (node) {
         let polygon = node.polygon;
