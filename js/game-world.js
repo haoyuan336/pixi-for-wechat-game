@@ -7,27 +7,20 @@ const GameState = {
     Run: 1,
     Dead: 2
 };
-const GameWorld = function (app) {
+const GameWorld = function () {
     let that = {};
     that.node = new PIXI.Container();
 
     that.node.interactive = true;
-    // that.node.on('touchstart', (event)=>{
-    //     console.log('touch  start');
-    //
-    // });
-    // that.node.on('touchmove', (event)=>{
-    //     console.log('touch move');
-    //     let data = event.data;
-    //     let pos = data.getLocalPosition(that.node);
-    //     console.log('pos = ' + JSON.stringify(pos));
-    // });
+    that.node.on('touchstart', (event)=>{
+        console.log('touch  start');
 
+    });
+    that.node.on('touchmove', (event)=>{
+        console.log('touch move');
+        let data = event.data;
+    });
 
-    let screenWidth = app.view.width;
-    console.log('screen width = ' + screenWidth);
-    let screenHeight = app.view.height;
-    console.log('screent height = ' + screenHeight);
 
     let _bgList = [];
     let _state = GameState.Invalide;
@@ -41,10 +34,9 @@ const GameWorld = function (app) {
         that.node.addChild(bg);
         console.log('width = ' + bg.width);
         _bgList.push(bg);
-        bg.anchor.set(0.5);
         bg.position = {
-            x: screenWidth * i,
-            y:  screenHeight * 0.5
+            x: bg.width * i,
+            y: 0
         }
     }
     let _towersList = [];
@@ -67,9 +59,6 @@ const GameWorld = function (app) {
             console.log('point down');
         }
     );
-    _bird.on('touchmove', en=>{
-        console.log('touch move sss');
-    });
 
 
     let _scoreText = new PIXI.Text('0', {
